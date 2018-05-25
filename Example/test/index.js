@@ -2,15 +2,20 @@ import React, { Component } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import Animated, { Easing } from 'react-native-reanimated';
+import Interactable from './Interactable';
 
 const {
   set,
   cond,
   eq,
   add,
+  sub,
+  divide,
   call,
   multiply,
   lessThan,
+  abs,
+  defined,
   startClock,
   stopClock,
   clockRunning,
@@ -23,92 +28,31 @@ const {
   event,
 } = Animated;
 
-function runSpring(clock, value, dest) {
-  const state = {
-    finished: new Value(0),
-    velocity: new Value(0),
-    position: new Value(0),
-    time: new Value(0),
-  };
-
-  const config = {
-    toValue: new Value(0),
-    damping: 7,
-    mass: 1,
-    stiffness: 121.6,
-    overshootClamping: false,
-    restSpeedThreshold: 0.001,
-    restDisplacementThreshold: 0.001,
-  };
-
-  return block([
-    cond(clockRunning(clock), 0, [
-      set(state.finished, 0),
-      set(state.time, 0),
-      set(state.position, value),
-      set(state.velocity, -2500),
-      set(config.toValue, dest),
-      startClock(clock),
-    ]),
-    spring(clock, state, config),
-    cond(state.finished, debug('stop clock', stopClock(clock))),
-    state.position,
-  ]);
+function interpolateSingle(value, inputRange, outputRange, offset) {
+  const inS = inputRange[offset];
+  const inE = inputRange[offset + 1];
+  const outS = outputRange[offset];
+  const outE = outputRange[offset + 1];
+  const progress = divide(sub(value, inS), sub(inE, inS));
+  return add(outS, multiply(progress, sub(outE, outS)));
 }
 
-function runTiming(clock, value, dest) {
-  const state = {
-    finished: new Value(0),
-    position: new Value(0),
-    time: new Value(0),
-    frameTime: new Value(0),
-  };
-
-  const config = {
-    duration: 5000,
-    toValue: new Value(0),
-    easing: Easing.inOut(Easing.ease),
-  };
-
-  return block([
-    cond(clockRunning(clock), 0, [
-      set(state.finished, 0),
-      set(state.time, 0),
-      set(state.position, value),
-      set(state.frameTime, 0),
-      set(config.toValue, dest),
-      startClock(clock),
-    ]),
-    timing(clock, state, config),
-    cond(state.finished, debug('stop clock', stopClock(clock))),
-    state.position,
-  ]);
+function interpolate(value, inputRange, outputRange, offset = 0) {
+  if (inputRange.length - offset === 2) {
+    return interpolateSingle(value, inputRange, outputRange, offset);
+  }
+  return cond(
+    lessThan(value, inputRange[offset + 1]),
+    interpolateSingle(value, inputRange, outputRange, offset),
+    interpolate(value, inputRange, outputRange, offset + 1)
+  );
 }
 
 export default class Example extends Component {
-  constructor(props) {
-    super(props);
-
-    // const transX = new Value(0);
-    const clock = new Clock();
-    // const twenty = new Value(20);
-    // const thirty = new Value(30);
-    // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
-    this._transX = runTiming(clock, -120, 120);
-  }
-  componentDidMount() {
-    // Animated.spring(this._transX, {
-    //   duration: 300,
-    //   velocity: -300,
-    //   toValue: 150,
-    // }).start();
-  }
   render() {
     return (
       <View style={styles.container}>
-        <Animated.View
-          style={[styles.box, { transform: [{ translateX: this._transX }] }]}
-        />
+        <Interactable snapPoints={[{ x: 0 }, { x: -200 }]} style={styles.box} />
       </View>
     );
   }
