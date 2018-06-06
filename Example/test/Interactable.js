@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, View } from 'react-native';
-
-import Animated, { Easing } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 
 const {
@@ -15,7 +13,6 @@ const {
   pow,
   multiply,
   lessThan,
-  abs,
   startClock,
   stopClock,
   debug,
@@ -32,15 +29,6 @@ function sq(x) {
   return multiply(x, x);
 }
 
-function snapDist(target, pt) {
-  if (pt.y === undefined) {
-    return sq(sub(target.x, pt.x));
-  } else if (pt.x === undefined) {
-    return sq(sub(target.y, pt.y));
-  }
-  return add(sq(sub(target.x, pt.x)), sq(sub(target.y, pt.y)));
-}
-
 function snapTo(target, snapPoints, best) {
   const dist = new Value(0);
   const snap = pt => [
@@ -49,11 +37,13 @@ function snapTo(target, snapPoints, best) {
     set(best.x, pt.x || 0),
     set(best.y, pt.y || 0),
   ];
+  const snapDist = pt =>
+    add(sq(sub(target.x, pt.x || 0)), sq(sub(target.y, pt.y || 0)));
   return [
-    set(dist, snapDist(target, snapPoints[0])),
+    set(dist, snapDist(snapPoints[0])),
     ...snap(snapPoints[0]),
     ...snapPoints.map(pt => {
-      const newDist = snapDist(target, pt);
+      const newDist = snapDist(pt);
       return cond(lessThan(newDist, dist), [set(dist, newDist), ...snap(pt)]);
     }),
   ];
