@@ -102,7 +102,7 @@ function anchorBehavior(dt, target, obj, anchor) {
   const dx = sub(anchor.x, target.x);
   const dy = sub(anchor.y, target.y);
   return {
-    x: debug('dddd', set(obj.vx, divide(dx, dt))),
+    x: set(obj.vx, divide(dx, dt)),
     y: set(obj.vy, divide(dy, dt)),
   };
 }
@@ -117,7 +117,6 @@ export default class Interactable extends Component {
 
     const drag = { x: new Value(0), y: new Value(0) };
     const state = new Value(-1);
-    const dragging = new Value(0);
 
     this._onGestureEvent = event([
       {
@@ -186,8 +185,9 @@ export default class Interactable extends Component {
       y: allBehaviors.map(b => b.y),
     };
 
-    const trans = (x, vx, drag, anchor, dragBehavior, behaviors) =>
-      cond(
+    const trans = (x, vx, drag, anchor, dragBehavior, behaviors) => {
+      const dragging = new Value(0);
+      return cond(
         eq(state, State.ACTIVE),
         [
           startClock(clock),
@@ -198,6 +198,7 @@ export default class Interactable extends Component {
         ],
         set(x, runSpring(clock, dragging, x, vx, snapTo(x, props.snapPoints)))
       );
+    };
 
     this._transX = trans(
       target.x,
@@ -207,16 +208,34 @@ export default class Interactable extends Component {
       dragBehavior.x,
       behaviors.x
     );
+    this._transY = trans(
+      target.y,
+      obj.vy,
+      drag.y,
+      dragAnchor.y,
+      dragBehavior.y,
+      behaviors.y
+    );
   }
   render() {
-    const { children, style } = this.props;
+    const { children, style, horizontalOnly, verticalOnly } = this.props;
     return (
       <PanGestureHandler
         maxPointers={1}
         onGestureEvent={this._onGestureEvent}
         onHandlerStateChange={this._onGestureEvent}>
         <Animated.View
-          style={[style, { transform: [{ translateX: this._transX }] }]}>
+          style={[
+            style,
+            {
+              transform: [
+                {
+                  translateX: !verticalOnly && this._transX,
+                  translateY: !horizontalOnly && this._transY,
+                },
+              ],
+            },
+          ]}>
           {children}
         </Animated.View>
       </PanGestureHandler>
