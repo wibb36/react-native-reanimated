@@ -44,16 +44,10 @@ function snapDist(target, pt) {
 function snapTo(target, snapPoints, best) {
   const dist = new Value(0);
   const snap = pt => [
-    set(
-      best.tension,
-      pt.tension === undefined ? DEFAULT_SNAP_TENSION : pt.tension
-    ),
-    set(
-      best.damping,
-      pt.damping === undefined ? DEFAULT_SNAP_DAMPING : pt.damping
-    ),
-    set(best.x, pt.x === undefined ? target.x : pt.x),
-    set(best.y, pt.y === undefined ? target.y : pt.y),
+    set(best.tension, pt.tension || DEFAULT_SNAP_TENSION),
+    set(best.damping, pt.damping || DEFAULT_SNAP_DAMPING),
+    set(best.x, pt.x || 0),
+    set(best.y, pt.y || 0),
   ];
   return [
     set(dist, snapDist(target, snapPoints[0])),
