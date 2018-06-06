@@ -12,70 +12,56 @@ const {
   sub,
   diff,
   divide,
-  call,
-  not,
   pow,
   multiply,
   lessThan,
   abs,
-  defined,
   startClock,
   stopClock,
-  clockRunning,
-  block,
-  timing,
   debug,
-  spring,
   Value,
   Clock,
   event,
 } = Animated;
 
-function runSpring(clock, finished, value, velocity, dest) {
-  const state = {
-    finished: finished,
-    velocity: new Value(0),
-    position: new Value(0),
-    time: new Value(0),
-  };
+const REST_SPEED_THRESHOLD = 0.001;
+const DEFAULT_SNAP_TENSION = 300;
+const DEFAULT_SNAP_DAMPING = 0.7;
 
-  const config = {
-    damping: 7,
-    mass: 1,
-    stiffness: 121.6,
-    overshootClamping: false,
-    restSpeedThreshold: 0.001,
-    restDisplacementThreshold: 0.001,
-    toValue: new Value(0),
-  };
-
-  return [
-    cond(state.finished, [
-      set(state.finished, 0),
-      set(state.velocity, velocity),
-      set(state.position, value),
-      set(config.toValue, dest),
-    ]),
-    spring(clock, state, config),
-    cond(state.finished, stopClock(clock)),
-    state.position,
-  ];
+function sq(x) {
+  return multiply(x, x);
 }
 
-function snapTo(value, snapPoints) {
+function snapDist(target, pt) {
+  if (pt.y === undefined) {
+    return sq(sub(target.x, pt.x));
+  } else if (pt.x === undefined) {
+    return sq(sub(target.y, pt.y));
+  }
+  return add(sq(sub(target.x, pt.x)), sq(sub(target.y, pt.y)));
+}
+
+function snapTo(target, snapPoints, best) {
   const dist = new Value(0);
-  const best = new Value(0);
+  const snap = pt => [
+    set(
+      best.tension,
+      pt.tension === undefined ? DEFAULT_SNAP_TENSION : pt.tension
+    ),
+    set(
+      best.damping,
+      pt.damping === undefined ? DEFAULT_SNAP_DAMPING : pt.damping
+    ),
+    set(best.x, pt.x === undefined ? target.x : pt.x),
+    set(best.y, pt.y === undefined ? target.y : pt.y),
+  ];
   return [
-    set(best, snapPoints[0].x),
-    set(dist, abs(sub(value, snapPoints[0].x))),
+    set(dist, snapDist(target, snapPoints[0])),
+    ...snap(snapPoints[0]),
     ...snapPoints.map(pt => {
-      const newDist = abs(sub(value, pt.x));
-      return cond(lessThan(newDist, dist), [
-        set(dist, newDist),
-        set(best, pt.x),
-      ]);
+      const newDist = snapDist(target, pt);
+      return cond(lessThan(newDist, dist), [set(dist, newDist), ...snap(pt)]);
     }),
-    best,
   ];
 }
 
@@ -115,14 +101,14 @@ export default class Interactable extends Component {
   constructor(props) {
     super(props);
 
-    const drag = { x: new Value(0), y: new Value(0) };
+    const gesture = { x: new Value(0), y: new Value(0) };
     const state = new Value(-1);
 
     this._onGestureEvent = event([
       {
         nativeEvent: {
-          translationX: drag.x,
-          translationY: drag.y,
+          translationX: gesture.x,
+          translationY: gesture.y,
           // velocityX: dragVX,
           state: state,
         },
@@ -143,24 +129,24 @@ export default class Interactable extends Component {
       mass: 1,
     };
 
-    const behaviorBuckets = [[], [], []];
+    const permBuckets = [[], [], []];
 
-    const addSpring = (anchor, tension) => {
-      behaviorBuckets[0].push(springBehavior(dt, target, obj, anchor, tension));
+    const addSpring = (anchor, tension, buckets = permBuckets) => {
+      buckets[0].push(springBehavior(dt, target, obj, anchor, tension));
     };
 
-    const addFriction = damping => {
-      behaviorBuckets[1].push(frictionBehavior(dt, target, obj, damping));
+    const addFriction = (damping, buckets = permBuckets) => {
+      buckets[1].push(frictionBehavior(dt, target, obj, damping));
     };
 
     const dragAnchor = { x: new Value(0), y: new Value(0) };
-    let dragBehavior;
+    const dragBuckets = [[], [], []];
     if (props.dragWithSpring) {
       const { tension, damping } = props.dragWithSpring;
-      dragBehavior = springBehavior(dt, target, obj, dragAnchor, tension);
-      addFriction(damping);
+      addSpring(dragAnchor, tension, dragBuckets);
+      addFriction(damping, dragBuckets);
     } else {
-      dragBehavior = anchorBehavior(dt, target, obj, dragAnchor);
+      dragBuckets[0].push(anchorBehavior(dt, target, obj, dragAnchor));
     }
 
     if (props.springPoints) {
@@ -172,50 +158,68 @@ export default class Interactable extends Component {
       });
     }
 
+    const snapBuckets = [[], [], []];
+    const snapAnchor = {
+      x: new Value(0),
+      y: new Value(0),
+      tension: new Value(DEFAULT_SNAP_TENSION),
+      damping: new Value(DEFAULT_SNAP_DAMPING),
+    };
+    const updateSnapTo = snapTo(target, props.snapPoints, snapAnchor);
+
+    addSpring(snapAnchor, snapAnchor.tension, snapBuckets);
+    addFriction(snapAnchor.damping, snapBuckets);
+
     // behaviors can go under one of three buckets depending on their priority
     // we append to each bucket but in Interactable behaviors get added to the
     // front, so we join in reverse order and then reverse the array.
-    const allBehaviors = [
-      ...behaviorBuckets[2],
-      ...behaviorBuckets[1],
-      ...behaviorBuckets[0],
-    ].reverse();
-    const behaviors = {
-      x: allBehaviors.map(b => b.x),
-      y: allBehaviors.map(b => b.y),
-    };
+    const sortBuckets = specialBuckets => ({
+      x: specialBuckets.map((b, idx) =>
+        [...permBuckets[idx], ...b].reverse().map(b => b.x)
+      ),
+      y: specialBuckets.map((b, idx) =>
+        [...permBuckets[idx], ...b].reverse().map(b => b.y)
+      ),
+    });
+    const dragBehaviors = sortBuckets(dragBuckets);
+    const snapBehaviors = sortBuckets(snapBuckets);
 
-    const trans = (x, vx, drag, anchor, dragBehavior, behaviors) => {
+    const shouldStop = lessThan(
+      add(sq(obj.vx), sq(obj.vy)),
+      REST_SPEED_THRESHOLD * REST_SPEED_THRESHOLD
+    );
+
+    const trans = (axis, vaxis) => {
       const dragging = new Value(0);
+      const start = new Value(0);
+      const x = target[axis];
+      const vx = obj[vaxis];
+      const anchor = dragAnchor[axis];
+      const drag = gesture[axis];
+      const update = set(x, add(x, multiply(vx, dt)));
       return cond(
         eq(state, State.ACTIVE),
         [
-          startClock(clock),
-          set(dragging, 1),
-          set(anchor, drag),
-          cond(dt, [dragBehavior, ...behaviors]),
-          set(x, add(x, multiply(vx, dt))),
+          cond(dragging, 0, [
+            startClock(clock),
+            set(dragging, 1),
+            set(start, x),
+          ]),
+          set(anchor, add(start, drag)),
+          cond(dt, dragBehaviors[axis]),
+          update,
         ],
-        set(x, runSpring(clock, dragging, x, vx, snapTo(x, props.snapPoints)))
+        [
+          cond(dragging, [updateSnapTo, set(dragging, 0)]),
+          cond(dt, snapBehaviors[axis]),
+          cond(shouldStop, stopClock(clock)),
+          update,
+        ]
       );
     };
 
-    this._transX = trans(
-      target.x,
-      obj.vx,
-      drag.x,
-      dragAnchor.x,
-      dragBehavior.x,
-      behaviors.x
-    );
-    this._transY = trans(
-      target.y,
-      obj.vy,
-      drag.y,
-      dragAnchor.y,
-      dragBehavior.y,
-      behaviors.y
-    );
+    this._transX = trans('x', 'vx');
+    this._transY = trans('y', 'vy');
   }
   render() {
     const { children, style, horizontalOnly, verticalOnly } = this.props;

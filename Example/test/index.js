@@ -33,17 +33,17 @@ const {
 export default class Example extends Component {
   render() {
     const props = {
-      snapPoints: [{ x: 0 }, { x: -200 }],
-      dragWithSpring: { tension: 2000, damping: 0.5 },
-      springPoints: [{ x: 0, tension: 6000, damping: 0.5 }],
+      snapPoints: [{ x: 0, y: 0, tension: 3000 }, { x: -100 }],
+      // dragWithSpring: { tension: 2000, damping: 0.5 },
+      // springPoints: [{ x: 0, tension: 6000, damping: 0.5 }],
       style: styles.box,
-      horizontalOnly: true,
+      // horizontalOnly: true,
     };
     return (
       <View style={styles.container}>
         <Wix.View
           horizontalOnly
-          dragWithSpring={{ tension: 2000, damping: 0.5 }}
+          springPoints={[{ x: 0, tension: 300, damping: 0.7 }]}
           style={styles.box}
         />
         <Wix.View {...props} />
