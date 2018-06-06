@@ -67,7 +67,7 @@ const ExampleApp = createStackNavigator(
     ...SCREENS,
   },
   {
-    initialRouteName: 'Main',
+    initialRouteName: 'Test',
   }
 );
 

@@ -4,6 +4,8 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { Easing } from 'react-native-reanimated';
 import Interactable from './Interactable';
 
+import Wix from 'react-native-interactable';
+
 const {
   set,
   cond,
@@ -28,31 +30,24 @@ const {
   event,
 } = Animated;
 
-function interpolateSingle(value, inputRange, outputRange, offset) {
-  const inS = inputRange[offset];
-  const inE = inputRange[offset + 1];
-  const outS = outputRange[offset];
-  const outE = outputRange[offset + 1];
-  const progress = divide(sub(value, inS), sub(inE, inS));
-  return add(outS, multiply(progress, sub(outE, outS)));
-}
-
-function interpolate(value, inputRange, outputRange, offset = 0) {
-  if (inputRange.length - offset === 2) {
-    return interpolateSingle(value, inputRange, outputRange, offset);
-  }
-  return cond(
-    lessThan(value, inputRange[offset + 1]),
-    interpolateSingle(value, inputRange, outputRange, offset),
-    interpolate(value, inputRange, outputRange, offset + 1)
-  );
-}
-
 export default class Example extends Component {
   render() {
+    const props = {
+      snapPoints: [{ x: 0 }, { x: -200 }],
+      dragWithSpring: { tension: 2000, damping: 0.5 },
+      style: styles.box,
+      horizontalOnly: true,
+    };
     return (
       <View style={styles.container}>
-        <Interactable snapPoints={[{ x: 0 }, { x: -200 }]} style={styles.box} />
+        <Wix.View
+          springPoints={[{ x: 0, tension: 6000, damping: 0.5 }]}
+          horizontalOnly
+          dragWithSpring={{ tension: 2000, damping: 0.5 }}
+          style={styles.box}
+        />
+        <Wix.View {...props} />
+        <Interactable {...props} />
       </View>
     );
   }
