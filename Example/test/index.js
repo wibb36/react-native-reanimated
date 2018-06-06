@@ -35,6 +35,7 @@ export default class Example extends Component {
     const props = {
       snapPoints: [{ x: 0 }, { x: -200 }],
       dragWithSpring: { tension: 2000, damping: 0.5 },
+      springPoints: [{ x: 0, tension: 6000, damping: 0.5 }],
       style: styles.box,
       horizontalOnly: true,
     };

@@ -159,7 +159,14 @@ export default class Interactable extends Component {
       dragBehavior = anchorBehavior(dt, target, obj, dragAnchor);
     }
 
-    addSpring({ x: 0 }, 6000);
+    if (props.springPoints) {
+      props.springPoints.forEach(pt => {
+        addSpring(pt, pt.tension);
+        if (pt.damping) {
+          addFriction(pt.damping);
+        }
+      });
+    }
 
     // behaviors can go under one of three buckets depending on their priority
     // we append to each bucket but in Interactable behaviors get added to the
