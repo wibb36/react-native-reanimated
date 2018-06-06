@@ -42,7 +42,6 @@ export default class Example extends Component {
     return (
       <View style={styles.container}>
         <Wix.View
-          springPoints={[{ x: 0, tension: 6000, damping: 0.5 }]}
           horizontalOnly
           dragWithSpring={{ tension: 2000, damping: 0.5 }}
           style={styles.box}

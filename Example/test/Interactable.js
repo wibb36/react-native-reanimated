@@ -82,19 +82,28 @@ function snapTo(value, snapPoints) {
 function springBehavior(dt, target, obj, anchor, tension = 300) {
   const dx = sub(target.x, anchor.x);
   const ax = divide(multiply(-1, tension, dx), obj.mass);
-  return set(obj.vx, add(obj.vx, multiply(dt, ax)));
+  const dy = sub(target.y, anchor.y);
+  const ay = divide(multiply(-1, tension, dy), obj.mass);
+  return {
+    x: set(obj.vx, add(obj.vx, multiply(dt, ax))),
+    y: set(obj.vy, add(obj.vy, multiply(dt, ay))),
+  };
 }
 
 function frictionBehavior(dt, target, obj, damping = 0.7) {
-  return set(obj.vx, multiply(obj.vx, pow(damping, multiply(60, dt))));
+  const friction = pow(damping, multiply(60, dt));
+  return {
+    x: set(obj.vx, multiply(obj.vx, friction)),
+    y: set(obj.vy, multiply(obj.vy, friction)),
+  };
 }
 
 function anchorBehavior(dt, target, obj, anchor) {
   const dx = sub(anchor.x, target.x);
-  const run = set(obj.vx, divide(dx, dt));
+  const dy = sub(anchor.y, target.y);
   return {
-    anchorX,
-    run,
+    x: debug('dddd', set(obj.vx, divide(dx, dt))),
+    y: set(obj.vy, divide(dy, dt)),
   };
 }
 
@@ -106,50 +115,46 @@ export default class Interactable extends Component {
   constructor(props) {
     super(props);
 
-    const dragX = new Value(0);
-    const dragVX = new Value(0);
+    const drag = { x: new Value(0), y: new Value(0) };
     const state = new Value(-1);
     const dragging = new Value(0);
 
     this._onGestureEvent = event([
       {
         nativeEvent: {
-          translationX: dragX,
-          velocityX: dragVX,
+          translationX: drag.x,
+          translationY: drag.y,
+          // velocityX: dragVX,
           state: state,
         },
       },
     ]);
 
-    const transX = new Value();
+    const target = { x: new Value(0), y: new Value(0) };
 
     const clock = new Clock();
 
-    const tossedX = transX; //add(transX, multiply(props.dragToss, dragVX));
+    // const tossedX = transX; //add(transX, multiply(props.dragToss, dragVX));
 
     const dt = divide(diff(clock), 1000);
 
     const obj = {
       vx: new Value(0),
+      vy: new Value(0),
       mass: 1,
     };
-    const target = {
-      x: transX,
-    };
 
-    const behaviors1 = [];
-    const behaviors2 = [];
-    const behaviors3 = [];
+    const behaviorBuckets = [[], [], []];
 
     const addSpring = (anchor, tension) => {
-      behaviors1.push(springBehavior(dt, target, obj, anchor, tension));
+      behaviorBuckets[0].push(springBehavior(dt, target, obj, anchor, tension));
     };
 
     const addFriction = damping => {
-      behaviors2.push(frictionBehavior(dt, target, obj, damping));
+      behaviorBuckets[1].push(frictionBehavior(dt, target, obj, damping));
     };
 
-    const dragAnchor = { x: new Value(0) };
+    const dragAnchor = { x: new Value(0), y: new Value(0) };
     let dragBehavior;
     if (props.dragWithSpring) {
       const { tension, damping } = props.dragWithSpring;
@@ -171,30 +176,36 @@ export default class Interactable extends Component {
     // behaviors can go under one of three buckets depending on their priority
     // we append to each bucket but in Interactable behaviors get added to the
     // front, so we join in reverse order and then reverse the array.
-    const behaviors = [...behaviors3, ...behaviors2, ...behaviors1].reverse();
+    const allBehaviors = [
+      ...behaviorBuckets[2],
+      ...behaviorBuckets[1],
+      ...behaviorBuckets[0],
+    ].reverse();
+    const behaviors = {
+      x: allBehaviors.map(b => b.x),
+      y: allBehaviors.map(b => b.y),
+    };
 
-    this._transX = cond(
-      eq(state, State.ACTIVE),
-      [
-        startClock(clock),
-        set(dragging, 1),
-        set(dragAnchor.x, dragX),
-        cond(dt, [dragBehavior, ...behaviors]),
-        set(transX, add(transX, multiply(obj.vx, dt))),
-      ],
-      [
-        set(
-          transX,
-          runSpring(
-            clock,
-            dragging,
-            transX,
-            obj.vx,
-            snapTo(tossedX, props.snapPoints)
-          ),
-          0
-        ),
-      ]
+    const trans = (x, vx, drag, anchor, dragBehavior, behaviors) =>
+      cond(
+        eq(state, State.ACTIVE),
+        [
+          startClock(clock),
+          set(dragging, 1),
+          set(anchor, drag),
+          cond(dt, [dragBehavior, ...behaviors]),
+          set(x, add(x, multiply(vx, dt))),
+        ],
+        set(x, runSpring(clock, dragging, x, vx, snapTo(x, props.snapPoints)))
+      );
+
+    this._transX = trans(
+      target.x,
+      obj.vx,
+      drag.x,
+      dragAnchor.x,
+      dragBehavior.x,
+      behaviors.x
     );
   }
   render() {
