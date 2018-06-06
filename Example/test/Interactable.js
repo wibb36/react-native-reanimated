@@ -90,6 +90,7 @@ function anchorBehavior(dt, target, obj, anchor) {
 export default class Interactable extends Component {
   static defaultProps = {
     dragToss: 0.1,
+    dragEnabled: true,
   };
 
   constructor(props) {
@@ -220,6 +221,7 @@ export default class Interactable extends Component {
     return (
       <PanGestureHandler
         maxPointers={1}
+        enabled={this.props.dragEnabled}
         onGestureEvent={this._onGestureEvent}
         onHandlerStateChange={this._onGestureEvent}>
         <Animated.View
