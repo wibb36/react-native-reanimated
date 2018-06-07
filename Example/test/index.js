@@ -34,16 +34,16 @@ const {
 export default class Example extends Component {
   render() {
     const props = {
-      snapPoints: [{ x: -100 }],
+      snapPoints: [{ x: -100 }, { x: 100 }],
       dragWithSpring: { tension: 2000, damping: 0.5 },
-      gravityPoints: [
-        {
-          x: 100,
-          strength: 8000,
-          falloff: 40,
-          damping: 0.7,
-        },
-      ],
+      // gravityPoints: [
+      //   {
+      //     x: 100,
+      //     strength: 8000,
+      //     falloff: 40,
+      //     damping: 0.7,
+      //   },
+      // ],
       // dragWithSpring: { tension: 2000, damping: 0.5 },
       // springPoints: [
       //   { x: 0, tension: 6000, damping: 0.5, influenceArea: { left: 0 } },

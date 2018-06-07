@@ -172,6 +172,11 @@ class Interactable extends Component {
       mass: 1,
     };
 
+    const tossedTarget = {
+      x: add(target.x, multiply(props.dragToss, obj.vx)),
+      y: add(target.x, multiply(props.dragToss, obj.vx)),
+    };
+
     const permBuckets = [[], [], []];
 
     const addSpring = (anchor, tension, influence, buckets = permBuckets) => {
@@ -252,7 +257,7 @@ class Interactable extends Component {
       tension: new Value(DEFAULT_SNAP_TENSION),
       damping: new Value(DEFAULT_SNAP_DAMPING),
     };
-    const updateSnapTo = snapTo(target, props.snapPoints, snapAnchor);
+    const updateSnapTo = snapTo(tossedTarget, props.snapPoints, snapAnchor);
 
     addSpring(snapAnchor, snapAnchor.tension, null, snapBuckets);
     addFriction(snapAnchor.damping, null, snapBuckets);
