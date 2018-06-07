@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { Easing } from 'react-native-reanimated';
 import Interactable from './Interactable';
 
+// import Playground from './playground/app';
 import Wix from 'react-native-interactable';
 
 const {
@@ -33,11 +34,22 @@ const {
 export default class Example extends Component {
   render() {
     const props = {
-      snapPoints: [{ x: 0, y: 0, tension: 3000 }, { x: -100 }],
+      snapPoints: [{ x: -100 }],
+      dragWithSpring: { tension: 2000, damping: 0.5 },
+      gravityPoints: [
+        {
+          x: 100,
+          strength: 8000,
+          falloff: 40,
+          damping: 0.7,
+        },
+      ],
       // dragWithSpring: { tension: 2000, damping: 0.5 },
-      // springPoints: [{ x: 0, tension: 6000, damping: 0.5 }],
+      // springPoints: [
+      //   { x: 0, tension: 6000, damping: 0.5, influenceArea: { left: 0 } },
+      // ],
       style: styles.box,
-      // horizontalOnly: true,
+      horizontalOnly: true,
     };
     return (
       <View style={styles.container}>
@@ -47,11 +59,12 @@ export default class Example extends Component {
           style={styles.box}
         />
         <Wix.View {...props} />
-        <Interactable {...props} />
+        <Interactable.View {...props} />
       </View>
     );
   }
 }
+// export default Playground;
 
 const BOX_SIZE = 100;
 
