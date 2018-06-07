@@ -122,9 +122,9 @@ function withInfluence(area, target, behavior) {
   }
   const testLeft = area.left === undefined || lessOrEq(area.left, target.x);
   const testRight = area.right === undefined || lessOrEq(target.x, area.right);
-  const testTop = area.top === undefined || lessOrEq(target.x, area.top);
+  const testTop = area.top === undefined || lessOrEq(area.top, target.y);
   const testBottom =
-    area.bottom === undefined || lessOrEq(area.bottom, target.y);
+    area.bottom === undefined || lessOrEq(target.y, area.bottom);
   const testNodes = [testLeft, testRight, testTop, testBottom].filter(
     t => t !== true
   );
@@ -237,6 +237,11 @@ class Interactable extends Component {
             pt.influenceArea || influenceAreaWithRadius(1.4 * falloff, pt);
           addFriction(pt.damping, influenceArea);
         }
+      });
+    }
+    if (props.frictionAreas) {
+      props.frictionAreas.forEach(pt => {
+        addFriction(pt.damping, pt.influenceArea);
       });
     }
 

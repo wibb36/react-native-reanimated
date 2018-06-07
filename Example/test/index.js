@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { Easing } from 'react-native-reanimated';
 import Interactable from './Interactable';
 
-// import Playground from './playground/app';
+import Playground from './playground/app';
 import Wix from 'react-native-interactable';
 
 const {
