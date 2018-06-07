@@ -139,6 +139,7 @@ class Interactable extends Component {
   static defaultProps = {
     dragToss: 0.1,
     dragEnabled: true,
+    initialPosition: { x: 0, y: 0 },
   };
 
   constructor(props) {
@@ -152,17 +153,17 @@ class Interactable extends Component {
         nativeEvent: {
           translationX: gesture.x,
           translationY: gesture.y,
-          // velocityX: dragVX,
           state: state,
         },
       },
     ]);
 
-    const target = { x: new Value(0), y: new Value(0) };
+    const target = {
+      x: new Value(props.initialPosition.x || 0),
+      y: new Value(props.initialPosition.y || 0),
+    };
 
     const clock = new Clock();
-
-    // const tossedX = transX; //add(transX, multiply(props.dragToss, dragVX));
 
     const dt = divide(diff(clock), 1000);
 

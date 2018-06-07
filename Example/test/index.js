@@ -48,6 +48,7 @@ export default class Example extends Component {
       // springPoints: [
       //   { x: 0, tension: 6000, damping: 0.5, influenceArea: { left: 0 } },
       // ],
+      initialPosition: { x: -60 },
       style: styles.box,
       horizontalOnly: true,
     };
