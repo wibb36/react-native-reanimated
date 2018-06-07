@@ -6,6 +6,9 @@ import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import Snappable from './snappable';
 import ImageViewer from './imageViewer';
 import Test from './test';
+import InteractablePlayground, {
+  SCREENS as INTERACTABLE_SCREENS,
+} from './interactablePlayground';
 import Interpolate from './src/interpolate';
 import Colors from './colors';
 
@@ -20,6 +23,7 @@ const SCREENS = {
   Snappable: { screen: Snappable, title: 'Snappable' },
   Test: { screen: Test, title: 'Test' },
   ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
+  Interactable: { screen: InteractablePlayground, title: 'Interactable' },
   Interpolate: { screen: Interpolate, title: 'Interpolate' },
   Colors: { screen: Colors, title: 'Colors' },
 };
@@ -65,9 +69,10 @@ const ExampleApp = createStackNavigator(
   {
     Main: { screen: MainScreen },
     ...SCREENS,
+    ...INTERACTABLE_SCREENS,
   },
   {
-    initialRouteName: 'Test',
+    initialRouteName: 'Main',
   }
 );
 
