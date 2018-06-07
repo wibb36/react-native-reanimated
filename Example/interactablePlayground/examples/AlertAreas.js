@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, Dimensions, Text } from 'react-native';
-import Interactable from 'react-native-interactable';
+import Interactable from '../../Interactable';
 
 const Screen = {
   width: Dimensions.get('window').width,

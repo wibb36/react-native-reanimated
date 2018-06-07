@@ -9,7 +9,7 @@ import {
   Slider,
   WebView,
 } from 'react-native';
-import Interactable from 'react-native-interactable';
+import Interactable from '../../Interactable';
 
 export default class TouchesInside extends Component {
   constructor(props) {

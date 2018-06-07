@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, Button } from 'react-native';
-import Interactable from 'react-native-interactable';
+import Interactable from '../../Interactable';
 
 export default class SnapTo extends Component {
   constructor(props) {

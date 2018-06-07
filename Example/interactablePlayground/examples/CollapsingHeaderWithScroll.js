@@ -6,7 +6,7 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import Interactable from 'react-native-interactable';
+import Interactable from '../../Interactable';
 
 const Screen = {
   height: Dimensions.get('window').height - 75,

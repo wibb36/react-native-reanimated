@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, Image, Animated, Dimensions } from 'react-native';
-import Interactable from 'react-native-interactable';
+import Interactable from '../../Interactable';
 
 const widthFactor = Dimensions.get('window').width / 375;
 const heightFactor = (Dimensions.get('window').height - 75) / 667;

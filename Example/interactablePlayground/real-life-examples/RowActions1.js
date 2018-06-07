@@ -9,7 +9,7 @@ import {
   Slider,
   Dimensions,
 } from 'react-native';
-import Interactable from 'react-native-interactable';
+import Interactable from '../../Interactable';
 
 const Screen = Dimensions.get('window');
 

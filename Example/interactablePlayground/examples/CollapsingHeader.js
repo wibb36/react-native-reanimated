@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, Animated } from 'react-native';
-import Interactable from 'react-native-interactable';
+import Interactable from '../../Interactable';
 
 export default class CollapsingHeader extends Component {
   constructor(props) {
