@@ -74,6 +74,9 @@ export const SCREENS = {
 };
 
 export default class MainScreen extends Component {
+  static navigationOptions = {
+    title: 'react-native-interactable',
+  };
   render() {
     const data = Object.keys(SCREENS).map(key => ({ key }));
     return (
