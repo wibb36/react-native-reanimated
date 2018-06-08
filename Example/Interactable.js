@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Animated from 'react-native-reanimated';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { greaterThan } from 'react-native-reanimated/src/base';
 
 const {
   add,
@@ -16,6 +17,7 @@ const {
   multiply,
   pow,
   set,
+  abs,
   greaterOrEq,
   lessOrEq,
   sqrt,
@@ -26,7 +28,8 @@ const {
   Value,
 } = Animated;
 
-const REST_SPEED_THRESHOLD = 0.001;
+const ANIMATOR_PAUSE_CONSECUTIVE_FRAMES = 10;
+const ANIMATOR_PAUSE_ZERO_VELOCITY = 1;
 const DEFAULT_SNAP_TENSION = 300;
 const DEFAULT_SNAP_DAMPING = 0.7;
 const DEFAULT_GRAVITY_STRENGTH = 400;
@@ -116,6 +119,33 @@ function gravityBehavior(
   };
 }
 
+function bounceBehavior(dt, target, obj, area, bounce = 0) {
+  const xnodes = [];
+  const ynodes = [];
+  const flipx = set(obj.vx, multiply(-1, obj.vx, bounce));
+  const flipy = set(obj.vy, multiply(-1, obj.vy, bounce));
+  if (area.left) {
+    xnodes.push(cond(and(eq(target.x, area.left), lessThan(obj.vx, 0)), flipx));
+  }
+  if (area.right) {
+    xnodes.push(
+      cond(and(eq(target.x, area.right), lessThan(0, obj.vx)), flipx)
+    );
+  }
+  if (area.top) {
+    xnodes.push(cond(and(eq(target.y, area.top), lessThan(obj.vy, 0)), flipy));
+  }
+  if (area.bottom) {
+    xnodes.push(
+      cond(and(eq(target.y, area.bottom), lessThan(0, obj.vy)), flipy)
+    );
+  }
+  return {
+    x: xnodes,
+    y: ynodes,
+  };
+}
+
 function withInfluence(area, target, behavior) {
   if (!area) {
     return behavior;
@@ -133,6 +163,17 @@ function withInfluence(area, target, behavior) {
     x: cond(test, behavior.x),
     y: cond(test, behavior.y),
   };
+}
+
+function withLimits(value, lowerBound, upperBound) {
+  let result = value;
+  if (lowerBound !== undefined) {
+    result = cond(lessThan(value, lowerBound), lowerBound, result);
+  }
+  if (upperBound !== undefined) {
+    result = cond(lessThan(upperBound, value), upperBound, result);
+  }
+  return result;
 }
 
 class Interactable extends Component {
@@ -226,6 +267,18 @@ class Interactable extends Component {
       dragBuckets[0].push(anchorBehavior(dt, target, obj, dragAnchor));
     }
 
+    const snapBuckets = [[], [], []];
+    const snapAnchor = {
+      x: new Value(props.initialPosition.x || 0),
+      y: new Value(props.initialPosition.y || 0),
+      tension: new Value(DEFAULT_SNAP_TENSION),
+      damping: new Value(DEFAULT_SNAP_DAMPING),
+    };
+    const updateSnapTo = snapTo(tossedTarget, props.snapPoints, snapAnchor);
+
+    addSpring(snapAnchor, snapAnchor.tension, null, snapBuckets);
+    addFriction(snapAnchor.damping, null, snapBuckets);
+
     if (props.springPoints) {
       props.springPoints.forEach(pt => {
         addSpring(pt, pt.tension, pt.influenceArea);
@@ -250,18 +303,17 @@ class Interactable extends Component {
         addFriction(pt.damping, pt.influenceArea);
       });
     }
-
-    const snapBuckets = [[], [], []];
-    const snapAnchor = {
-      x: new Value(0),
-      y: new Value(0),
-      tension: new Value(DEFAULT_SNAP_TENSION),
-      damping: new Value(DEFAULT_SNAP_DAMPING),
-    };
-    const updateSnapTo = snapTo(tossedTarget, props.snapPoints, snapAnchor);
-
-    addSpring(snapAnchor, snapAnchor.tension, null, snapBuckets);
-    addFriction(snapAnchor.damping, null, snapBuckets);
+    if (props.boundaries) {
+      snapBuckets[0].push(
+        bounceBehavior(
+          dt,
+          target,
+          obj,
+          props.boundaries,
+          props.boundaries.bounce
+        )
+      );
+    }
 
     // behaviors can go under one of three buckets depending on their priority
     // we append to each bucket but in Interactable behaviors get added to the
@@ -277,23 +329,50 @@ class Interactable extends Component {
     const dragBehaviors = sortBuckets(dragBuckets);
     const snapBehaviors = sortBuckets(snapBuckets);
 
+    const noMovementFrames = {
+      x: new Value(
+        props.verticalOnly ? ANIMATOR_PAUSE_CONSECUTIVE_FRAMES + 1 : 0
+      ),
+      y: new Value(
+        props.horizontalOnly ? ANIMATOR_PAUSE_CONSECUTIVE_FRAMES + 1 : 0
+      ),
+    };
     const stopWhenNeeded = cond(
-      lessThan(
-        add(sq(obj.vx), sq(obj.vy)),
-        REST_SPEED_THRESHOLD * REST_SPEED_THRESHOLD
+      and(
+        greaterOrEq(noMovementFrames.x, ANIMATOR_PAUSE_CONSECUTIVE_FRAMES),
+        greaterOrEq(noMovementFrames.y, ANIMATOR_PAUSE_CONSECUTIVE_FRAMES)
       ),
       stopClock(clock),
       startClock(clock)
     );
 
-    const trans = (axis, vaxis) => {
+    const trans = (axis, vaxis, lowerBound, upperBound) => {
       const dragging = new Value(0);
       const start = new Value(0);
       const x = target[axis];
       const vx = obj[vaxis];
       const anchor = dragAnchor[axis];
       const drag = gesture[axis];
-      const update = set(x, add(x, multiply(vx, dt)));
+      let advance = cond(
+        lessThan(abs(vx), ANIMATOR_PAUSE_ZERO_VELOCITY),
+        x,
+        add(x, multiply(vx, dt))
+      );
+      if (props.boundaries) {
+        advance = withLimits(
+          advance,
+          props.boundaries[lowerBound],
+          props.boundaries[upperBound]
+        );
+      }
+      const last = new Value(Number.MAX_SAFE_INTEGER);
+      const noMoveFrameCount = noMovementFrames[axis];
+      const testMovementFrames = cond(
+        eq(advance, last),
+        set(noMoveFrameCount, add(noMoveFrameCount, 1)),
+        [set(last, advance), set(noMoveFrameCount, 0)]
+      );
+      const update = set(x, advance);
       return cond(
         eq(state, State.ACTIVE),
         [
@@ -309,14 +388,15 @@ class Interactable extends Component {
         [
           cond(dragging, [updateSnapTo, set(dragging, 0)]),
           cond(dt, snapBehaviors[axis]),
+          testMovementFrames,
           stopWhenNeeded,
           update,
         ]
       );
     };
 
-    this._transX = trans('x', 'vx');
-    this._transY = trans('y', 'vy');
+    this._transX = trans('x', 'vx', 'left', 'right');
+    this._transY = trans('y', 'vy', 'top', 'bottom');
   }
   render() {
     const { children, style, horizontalOnly, verticalOnly } = this.props;
