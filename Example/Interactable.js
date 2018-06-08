@@ -124,18 +124,18 @@ function bounceBehavior(dt, target, obj, area, bounce = 0) {
   const ynodes = [];
   const flipx = set(obj.vx, multiply(-1, obj.vx, bounce));
   const flipy = set(obj.vy, multiply(-1, obj.vy, bounce));
-  if (area.left) {
+  if (area.left !== undefined) {
     xnodes.push(cond(and(eq(target.x, area.left), lessThan(obj.vx, 0)), flipx));
   }
-  if (area.right) {
+  if (area.right !== undefined) {
     xnodes.push(
       cond(and(eq(target.x, area.right), lessThan(0, obj.vx)), flipx)
     );
   }
-  if (area.top) {
+  if (area.top !== undefined) {
     xnodes.push(cond(and(eq(target.y, area.top), lessThan(obj.vy, 0)), flipy));
   }
-  if (area.bottom) {
+  if (area.bottom !== undefined) {
     xnodes.push(
       cond(and(eq(target.y, area.bottom), lessThan(0, obj.vy)), flipy)
     );
