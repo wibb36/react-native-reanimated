@@ -53,11 +53,6 @@ export default class Example extends Component {
     };
     return (
       <View style={styles.container}>
-        <Wix.View
-          horizontalOnly
-          springPoints={[{ x: 0, tension: 300, damping: 0.7 }]}
-          style={styles.box}
-        />
         <Wix.View {...props} />
         <Interactable.View {...props} />
       </View>

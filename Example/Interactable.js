@@ -332,8 +332,8 @@ class Interactable extends Component {
             {
               transform: [
                 {
-                  translateX: !verticalOnly && this._transX,
-                  translateY: !horizontalOnly && this._transY,
+                  translateX: verticalOnly ? 0 : this._transX,
+                  translateY: horizontalOnly ? 0 : this._transY,
                 },
               ],
             },
