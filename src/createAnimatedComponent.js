@@ -13,6 +13,7 @@ const NODE_MAPPING = new Map();
 
 function listener(data) {
   const component = NODE_MAPPING.get(data.viewTag);
+  console.log(data);
   component && component._updateFromNative(data.props);
 }
 
@@ -192,8 +193,14 @@ export default function createAnimatedComponent(Component) {
       const style = {};
       for (const key in inputStyle) {
         const value = inputStyle[key];
-        if (!(value instanceof AnimatedNode) && key !== 'transform') {
-          style[key] = value;
+        if (!(value instanceof AnimatedNode)) {
+          if (typeof value === 'object') {
+            style[key] = this._filterNonAnimatedOtherObjects(value);
+          } else {
+            if (key !== 'transform') {
+              style[key] = value;
+            }
+          }
         }
       }
       return style;
@@ -210,6 +217,24 @@ export default function createAnimatedComponent(Component) {
         }
       }
       return props;
+      console.log(props);
+    }
+
+    _filterNonAnimatedOtherObjects(inputObj) {
+      console.log(inputObj);
+      const obj = {};
+      for (const key in inputObj) {
+        console.log(key);
+        const value = inputObj[key];
+        if (!(value instanceof AnimatedNode)) {
+          if (typeof value === 'object') {
+            obj[key] = this._filterNonAnimatedOtherObjects(value);
+          } else {
+            obj[key] = value;
+          }
+        }
+      }
+      return obj;
     }
 
     render() {

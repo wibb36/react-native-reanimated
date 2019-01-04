@@ -63,33 +63,16 @@ export default class Example extends Component {
     return (
       <Animated.View
         style={[styles.container, { borderWidth: divide(this._trans, 5) }]}>
-        <Animated.Text
+        <Animated.View
           style={[
             styles.box,
             {
-              width: this._trans,
-              height: this._trans,
+              shadowOffset: { width: this._trans, height: 100 },
+              shadowColor: 'black',
+              shadowOpacity: 1.0,
             },
-          ]}>
-          sample text is getting bigger and bigger more and moar staph staph
-          stophhh
-        </Animated.Text>
-        <Animated.Text
-          style={[
-            styles.text,
-            {
-              fontSize: add(divide(this._trans, 10), 15),
-              letterSpacing: add(divide(this._trans, -15), 10),
-              fontStyle: cond(
-                greaterThan(this._trans, 190),
-                'normal',
-                'italic'
-              ),
-            },
-          ]}>
-          aesthetic
-        </Animated.Text>
-        <Animated.View style={[styles.box, { top: this._trans }]} />
+          ]}
+        />
       </Animated.View>
     );
   }
@@ -116,6 +99,5 @@ const styles = StyleSheet.create({
     borderColor: '#f900ff',
     alignSelf: 'center',
     backgroundColor: '#19ff75',
-    margin: BOX_SIZE / 2,
   },
 });
