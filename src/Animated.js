@@ -1,4 +1,10 @@
-import { Image, ScrollView, Text, View } from 'react-native';
+import {
+  Image,
+  ScrollView,
+  Text,
+  View,
+  requireNativeComponent,
+} from 'react-native';
 import Easing from './Easing';
 import AnimatedClock from './core/AnimatedClock';
 import AnimatedValue from './core/AnimatedValue';
@@ -49,4 +55,8 @@ const Animated = {
 
 export default Animated;
 
-export { Easing };
+const Transitioning = {
+  View: requireNativeComponent('REATransitioningView', null),
+};
+
+export { Easing, Transitioning };
