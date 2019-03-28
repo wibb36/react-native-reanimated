@@ -24,20 +24,22 @@ class ExampleApp extends React.Component {
     return (
       <View>
         <Button title="Click Me" onPress={this.onClick} />
-        <Transitioning.View
+        {/* <Transitioning.View
           key={keys[0]}
           style={{ backgroundColor: keys[0], width: size, height: size }}
-        />
+        /> */}
         {visible ? (
           <Transitioning.View
             key="dupa"
+            inTransition="slide-bottom"
+            outTransition="slide-top"
             style={{ backgroundColor: 'green', width: size, height: size }}
           />
         ) : null}
-        <Transitioning.View
+        {/* <Transitioning.View
           key={keys[1]}
           style={{ backgroundColor: keys[1], width: size, height: size }}
-        />
+        /> */}
       </View>
     );
   }

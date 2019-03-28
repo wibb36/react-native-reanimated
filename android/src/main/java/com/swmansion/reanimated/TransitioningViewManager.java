@@ -16,8 +16,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.BounceInterpolator;
 
+import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.views.view.ReactViewGroup;
@@ -27,7 +27,6 @@ public class TransitioningViewManager extends ReactViewManager {
 
   private static final class InOutTransition extends Visibility {
     static final String PROPNAME_VISIBILITY = "android:visibility:visibility";
-    static final String PROPNAME_SCREEN_POSITION = "android:slide:screenPosition";
 
     public static final int IN = Visibility.MODE_IN;
     public static final int OUT = Visibility.MODE_OUT;
@@ -41,6 +40,12 @@ public class TransitioningViewManager extends ReactViewManager {
       super.captureStartValues(transitionValues);
       if (transitionValues.view instanceof TransitioningView) {
         TransitioningView tv = (TransitioningView) transitionValues.view;
+        if (tv.appearing && tv.inTransition != null) {
+          tv.inTransition.captureStartValues(transitionValues);
+        }
+        if (tv.disappearing && tv.outTransition != null) {
+          tv.outTransition.captureStartValues(transitionValues);
+        }
         transitionValues.values.put(PROPNAME_VISIBILITY, tv.appearing ? View.GONE : View.VISIBLE);
       }
     }
@@ -50,24 +55,38 @@ public class TransitioningViewManager extends ReactViewManager {
       super.captureEndValues(transitionValues);
       if (transitionValues.view instanceof TransitioningView) {
         TransitioningView tv = (TransitioningView) transitionValues.view;
+        if (tv.appearing && tv.inTransition != null) {
+          tv.inTransition.captureEndValues(transitionValues);
+        }
+        if (tv.disappearing && tv.outTransition != null) {
+          tv.outTransition.captureEndValues(transitionValues);
+        }
         transitionValues.values.put(PROPNAME_VISIBILITY, tv.disappearing ? View.GONE : View.VISIBLE);
         tv.appearing = false;
         tv.disappearing = false;
       }
-      View view = transitionValues.view;
-      int[] position = new int[2];
-      view.getLocationOnScreen(position);
-      transitionValues.values.put(PROPNAME_SCREEN_POSITION, position);
     }
 
     @Override
     public Animator onAppear(ViewGroup sceneRoot, View view, TransitionValues startValues, TransitionValues endValues) {
-      return new Slide(Gravity.RIGHT).onAppear(sceneRoot, view, startValues, endValues);
+      if (view instanceof TransitioningView) {
+        TransitioningView tv = (TransitioningView) view;
+        if (tv.inTransition != null) {
+          return tv.inTransition.onAppear(sceneRoot, view, startValues, endValues);
+        }
+      }
+      return null;
     }
 
     @Override
     public Animator onDisappear(ViewGroup sceneRoot, View view, TransitionValues startValues, TransitionValues endValues) {
-      return new Fade(Fade.OUT).onDisappear(sceneRoot, view, startValues, endValues);
+      if (view instanceof TransitioningView) {
+        TransitioningView tv = (TransitioningView) view;
+        if (tv.outTransition != null) {
+          return tv.outTransition.onDisappear(sceneRoot, view, startValues, endValues);
+        }
+      }
+      return null;
     }
   }
 
@@ -99,6 +118,8 @@ public class TransitioningViewManager extends ReactViewManager {
 
     public boolean appearing = true;
     public boolean disappearing = false;
+    public Visibility inTransition = null;
+    public Visibility outTransition = null;
 
     public TransitioningView(Context context) {
       super(context);
@@ -114,8 +135,8 @@ public class TransitioningViewManager extends ReactViewManager {
     @Override
     protected void onDetachedFromWindow() {
       super.onDetachedFromWindow();
-      TransitionManager.beginDelayedTransition((ViewGroup) getParent(), sTransition);
       disappearing = true;
+      TransitionManager.beginDelayedTransition((ViewGroup) getParent(), sTransition);
     }
   }
 
@@ -129,23 +150,33 @@ public class TransitioningViewManager extends ReactViewManager {
     return new TransitioningView(context);
   }
 
-  enum TRANSITION_TYPES {
-    SLIDE_TOP,
-    SLIDE_BOTTOM,
-    SLIDE_RIGHT,
-    SLIDE_LEFT
+  private static Visibility createTransition(String type) {
+    if (type == null || "none".equals(type)) {
+      return null;
+    } else if ("fade".equals(type)) {
+      return new Fade(Fade.IN | Fade.OUT);
+    } else if ("scale".equals(type)) {
+      return new Scale();
+    } else if ("slide-top".equals(type)) {
+      return new Slide(Gravity.TOP);
+    } else if ("slide-bottom".equals(type)) {
+      return new Slide(Gravity.BOTTOM);
+    } else if ("slide-right".equals(type)) {
+      return new Slide(Gravity.RIGHT);
+    } else if ("slide-left".equals(type)) {
+      return new Slide(Gravity.LEFT);
+    }
+    throw new JSApplicationIllegalArgumentException("Invalid transition type " + type);
   }
 
   @ReactProp(name = "inTransition")
-  public void setInTransition(TransitioningView view, String inTransition) {
-
+  public void setInTransition(TransitioningView view, String type) {
+    view.inTransition = createTransition(type);
   }
 
-//  @Override
-//  public boolean needsCustomLayoutForChildren() {
-//    Log.e("CAT", "NEEDS?");
-//    TransitionManager.beginDelayedTransition(this);
-//    return false;
-////    return true;
-//  }
+  @ReactProp(name = "outTransition")
+  public void setOutTransition(TransitioningView view, String type) {
+    view.outTransition = createTransition(type);
+  }
+
 }
