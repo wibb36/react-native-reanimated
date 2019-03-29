@@ -1,23 +1,20 @@
 package com.swmansion.reanimated.transitions;
 
-import android.support.transition.Fade;
-import android.support.transition.Slide;
 import android.support.transition.Transition;
 import android.support.transition.Visibility;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.DecelerateInterpolator;
-import android.view.animation.LinearInterpolator;
 
-import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.uimanager.LayoutShadowNode;
+import com.facebook.react.uimanager.NativeViewHierarchyOptimizer;
 import com.facebook.react.uimanager.ThemedReactContext;
+import com.facebook.react.uimanager.UIViewOperationQueue;
 import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.views.view.ReactViewGroup;
 import com.facebook.react.views.view.ReactViewManager;
+
+import javax.annotation.Nullable;
 
 public class TransitioningViewManager extends ReactViewManager {
 
@@ -31,54 +28,14 @@ public class TransitioningViewManager extends ReactViewManager {
     return new TransitioningView(context);
   }
 
-  private static Visibility createTransition(String type) {
-    if (type == null || "none".equals(type)) {
-      return null;
-    } else if ("fade".equals(type)) {
-      return new Fade(Fade.IN | Fade.OUT);
-    } else if ("scale".equals(type)) {
-      return new Scale();
-    } else if ("slide-top".equals(type)) {
-      return new Slide(Gravity.TOP);
-    } else if ("slide-bottom".equals(type)) {
-      return new Slide(Gravity.BOTTOM);
-    } else if ("slide-right".equals(type)) {
-      return new Slide(Gravity.RIGHT);
-    } else if ("slide-left".equals(type)) {
-      return new Slide(Gravity.LEFT);
-    }
-    throw new JSApplicationIllegalArgumentException("Invalid transition type " + type);
-  }
-
-  private static void configureTransition(Transition transition, ReadableMap params) {
-    if (params.hasKey("durationMs")) {
-      int durationMs = params.getInt("durationMs");
-      transition.setDuration(durationMs);
-    }
-    if (params.hasKey("interpolation")) {
-      String interpolation = params.getString("interpolation");
-      if (interpolation.equals("easeIn")) {
-        transition.setInterpolator(new AccelerateInterpolator());
-      } else if (interpolation.equals("easeOut")) {
-        transition.setInterpolator(new DecelerateInterpolator());
-      } else if (interpolation.equals("easeInOut")) {
-        transition.setInterpolator(new AccelerateDecelerateInterpolator());
-      } else if (interpolation.equals("linear")) {
-        transition.setInterpolator(new LinearInterpolator());
-      } else {
-        throw new JSApplicationIllegalArgumentException("Invalid interpolation type " + interpolation);
-      }
-    }
-  }
-
   @ReactProp(name = "inTransition")
   public void setInTransition(TransitioningView view, ReadableMap params) {
     if (params == null) {
       view.inTransition = null;
     } else {
       String type = params.getString("type");
-      Visibility transition = createTransition(type);
-      configureTransition(transition, params);
+      Visibility transition = TransitionUtils.createTransition(type);
+      TransitionUtils.configureTransition(transition, params);
       view.inTransition = transition;
     }
   }
@@ -89,8 +46,8 @@ public class TransitioningViewManager extends ReactViewManager {
       view.outTransition = null;
     } else {
       String type = params.getString("type");
-      Visibility transition = createTransition(type);
-      configureTransition(transition, params);
+      Visibility transition = TransitionUtils.createTransition(type);
+      TransitionUtils.configureTransition(transition, params);
       view.outTransition = transition;
     }
   }
@@ -98,7 +55,7 @@ public class TransitioningViewManager extends ReactViewManager {
   @ReactProp(name = "changeTransition")
   public void setChangeTransition(TransitioningView view, ReadableMap params) {
     Transition transition = new DummyTransition();
-    configureTransition(transition, params);
+    TransitionUtils.configureTransition(transition, params);
     view.changeTransition = transition;
   }
 
@@ -107,5 +64,48 @@ public class TransitioningViewManager extends ReactViewManager {
     Log.e("CAT", "UPDATE TRANSFORM");
     ((TransitioningView) view).initTransitioningInParent();
     super.setTransform(view, matrix);
+  }
+
+  @Override
+  public void removeAllViews(ReactViewGroup parent) {
+    Log.e("CAT", "REMOVE ALL VIEWS " + parent.getId());
+    super.removeAllViews(parent);
+  }
+
+  private static class SomeShadowNode extends LayoutShadowNode {
+    @Override
+    public boolean dispatchUpdates(float absoluteX, float absoluteY, UIViewOperationQueue uiViewOperationQueue, @Nullable NativeViewHierarchyOptimizer nativeViewHierarchyOptimizer) {
+      Log.e("CAT", "DISPATCH UPDATES " + this);
+      return super.dispatchUpdates(absoluteX, absoluteY, uiViewOperationQueue, nativeViewHierarchyOptimizer);
+    }
+    //    @Override
+//    public void markUpdated() {
+//      Log.e("CAT", "SHADOW MARK UPDATED " + getChildCount() + " " + this);
+//      super.markUpdated();
+//    }
+//
+//    @Override
+//    public void removeAndDisposeAllChildren() {
+//      Log.e("CAT", "REMOVE AND DISPOSE " + getNativeChildCount() + " " + this);
+//      super.removeAndDisposeAllChildren();
+//      markUpdated();
+//    }
+//
+//    @Override
+//    public void onAfterUpdateTransaction() {
+//      Log.e("CAT", "AFTER UPDATE " + this);
+//      super.onAfterUpdateTransaction();
+//    }
+//
+//    @Override
+//    public void onCollectExtraUpdates(UIViewOperationQueue uiViewOperationQueue) {
+//      Log.e("CAT", "COLLECT " + this);
+//      super.onCollectExtraUpdates(uiViewOperationQueue);
+//    }
+  }
+
+  @Override
+  public LayoutShadowNode createShadowNodeInstance() {
+    return new SomeShadowNode();
   }
 }

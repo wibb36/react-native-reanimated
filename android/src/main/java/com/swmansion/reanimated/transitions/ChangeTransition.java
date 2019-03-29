@@ -25,62 +25,40 @@ final class ChangeTransition extends Transition {
     sChangeTransform.setReparentWithOverlay(false);
   }
 
-//  public ChangeTransition() {
-//    setOrdering(ORDERING_TOGETHER);
-//    ChangeTransform changeTransform = new ChangeTransform();
-//    changeTransform.setReparent(false);
-//    changeTransform.setReparentWithOverlay(false);
-//    addTransition(changeTransform);
-//    addTransition(new ChangeBounds());
-//  }
 
   @Override
   public void captureStartValues(TransitionValues transitionValues) {
-    if (transitionValues.view instanceof TransitioningView) {
-      TransitioningView tv = (TransitioningView) transitionValues.view;
-      if (!tv.isDisappearing() && !tv.isAppearing()) {
-//        super.captureStartValues(transitionValues);
-        sChangeTransform.captureStartValues(transitionValues);
-        sChangeBounds.captureStartValues(transitionValues);
-        if (transitionValues.values.containsKey(PROPNAME_BOUNDS)) {
-          transitionValues.values.put(PROPNAME_BOUNDS, tv.getOldBounds());
-        }
-      }
-    }
+    sChangeTransform.captureStartValues(transitionValues);
+    sChangeBounds.captureStartValues(transitionValues);
   }
 
   @Override
   public void captureEndValues(TransitionValues transitionValues) {
-    if (transitionValues.view instanceof TransitioningView) {
-      TransitioningView tv = (TransitioningView) transitionValues.view;
-      if (!tv.isAppearing() && !tv.isDisappearing()) {
-        sChangeTransform.captureEndValues(transitionValues);
-        sChangeBounds.captureEndValues(transitionValues);
-      }
-    }
+    sChangeTransform.captureEndValues(transitionValues);
+    sChangeBounds.captureEndValues(transitionValues);
   }
 
   @Override
   public Animator createAnimator(ViewGroup sceneRoot, TransitionValues startValues, TransitionValues endValues) {
+    Animator changeTransformAnimator = sChangeTransform.createAnimator(sceneRoot, startValues, endValues);
+    Animator changeBoundsAnimator = sChangeBounds.createAnimator(sceneRoot, startValues, endValues);
+
     if (endValues != null && endValues.view instanceof TransitioningView) {
       TransitioningView tv = (TransitioningView) endValues.view;
-
-      Animator changeTransformAnimator = sChangeTransform.createAnimator(sceneRoot, startValues, endValues);
       TransitionUtils.configureAnimator(changeTransformAnimator, tv.changeTransition);
-
-      Animator changeBoundsAnimator = sChangeBounds.createAnimator(sceneRoot, startValues, endValues);
       TransitionUtils.configureAnimator(changeBoundsAnimator, tv.changeTransition);
-
-      if (changeTransformAnimator == null) {
-        return changeBoundsAnimator;
-      }
-      if (changeBoundsAnimator == null) {
-        return changeTransformAnimator;
-      }
-      AnimatorSet animatorSet = new AnimatorSet();
-      animatorSet.playTogether(changeTransformAnimator, changeBoundsAnimator);
-      return animatorSet;
     }
-    return null;
+
+    if (changeTransformAnimator == null) {
+      return changeBoundsAnimator;
+    }
+
+    if (changeBoundsAnimator == null) {
+      return changeTransformAnimator;
+    }
+
+    AnimatorSet animatorSet = new AnimatorSet();
+    animatorSet.playTogether(changeTransformAnimator, changeBoundsAnimator);
+    return animatorSet;
   }
 }

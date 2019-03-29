@@ -3,8 +3,11 @@ import {
   ScrollView,
   Text,
   View,
+  UIManager,
   requireNativeComponent,
+  findNodeHandle,
 } from 'react-native';
+import React from 'react';
 import Easing from './Easing';
 import AnimatedClock from './core/AnimatedClock';
 import AnimatedValue from './core/AnimatedValue';
@@ -55,8 +58,27 @@ const Animated = {
 
 export default Animated;
 
+const TransitioningRootComponent = requireNativeComponent(
+  'REATransitioningRoot'
+);
+
+class Root extends React.Component {
+  rootRef = React.createRef();
+  animateNextTransition = () => {
+    UIManager.dispatchViewManagerCommand(
+      findNodeHandle(this.rootRef.current),
+      101,
+      null
+    );
+  };
+  render() {
+    return <TransitioningRootComponent {...this.props} ref={this.rootRef} />;
+  }
+}
+
 const Transitioning = {
-  View: requireNativeComponent('REATransitioningView', null),
+  View: requireNativeComponent('REATransitioningView'),
+  Root,
 };
 
 export { Easing, Transitioning };
