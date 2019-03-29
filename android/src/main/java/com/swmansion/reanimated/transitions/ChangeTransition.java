@@ -62,7 +62,7 @@ final class ChangeTransition extends Transition {
 
   @Override
   public Animator createAnimator(ViewGroup sceneRoot, TransitionValues startValues, TransitionValues endValues) {
-    if (endValues.view instanceof TransitioningView) {
+    if (endValues != null && endValues.view instanceof TransitioningView) {
       TransitioningView tv = (TransitioningView) endValues.view;
 
       Animator changeTransformAnimator = sChangeTransform.createAnimator(sceneRoot, startValues, endValues);

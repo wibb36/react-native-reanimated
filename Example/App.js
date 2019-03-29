@@ -52,7 +52,6 @@ class ExampleApp extends React.Component {
         /> */}
         {visible ? (
           <Transitioning.View
-            key="dupa"
             inTransition={{ type: 'fade' }}
             outTransition={{
               type: 'slide-right',
