@@ -69,7 +69,6 @@ final class TransitioningView extends ReactViewGroup {
   }
 
   void notifyEndCapture() {
-    Log.e("CAT", "NOTIFY END");
     mAppearing = false;
     mDisappearing = false;
     oldLeft = getLeft();
@@ -85,16 +84,8 @@ final class TransitioningView extends ReactViewGroup {
   }
 
   public Rect getOldBounds() {
-    Log.e("CAT", "OLD BOUNDS " + oldLeft + ", " + oldTop);
     return new Rect(oldLeft, oldTop, oldRight, oldBottom);
   }
-
-//  @Override
-//  protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-//    Log.e("CAT", "MEASURE");
-//
-//    super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-//  }
 
   @Override
   protected void onDetachedFromWindow() {

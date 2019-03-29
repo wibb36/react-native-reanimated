@@ -24,7 +24,7 @@ class ExampleApp extends React.Component {
     });
   };
   render() {
-    const { size, visible, rotate } = this.state;
+    const { size, visible, rotate, snap } = this.state;
     const keys = ['red', 'blue'];
     shuffleArray(keys);
     return (
@@ -38,6 +38,14 @@ class ExampleApp extends React.Component {
           title="enlarge by 20px"
           onPress={() => this.setState({ size: size + 20 })}
         />
+        <Button
+          title="snap left"
+          onPress={() => this.setState({ snap: 'flex-start' })}
+        />
+        <Button
+          title="snap right"
+          onPress={() => this.setState({ snap: 'flex-end' })}
+        />
         {/* <Transitioning.View
           key={keys[0]}
           style={{ backgroundColor: keys[0], width: size, height: size }}
@@ -48,16 +56,15 @@ class ExampleApp extends React.Component {
             inTransition={{ type: 'fade' }}
             outTransition={{
               type: 'slide-right',
-              durationMs: 5000,
+              durationMs: 1000,
               interpolation: 'linear',
             }}
+            changeTransition={{ durationMs: 2000, interpolation: 'linear' }}
             style={{
               backgroundColor: 'green',
               width: 80,
               height: 80,
-              position: 'absolute',
-              top: 200,
-              left: size,
+              alignSelf: snap,
             }}
           />
         ) : null}

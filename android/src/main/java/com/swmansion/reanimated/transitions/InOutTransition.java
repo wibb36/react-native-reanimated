@@ -59,24 +59,12 @@ final class InOutTransition extends Visibility {
     }
   }
 
-  private Animator configureAnimator(Animator animator, Transition transition) {
-    long duration = transition.getDuration();
-    if (duration >= 0) {
-      animator.setDuration(duration);
-    }
-    TimeInterpolator interpolator = transition.getInterpolator();
-    if (interpolator != null) {
-      animator.setInterpolator(interpolator);
-    }
-    return animator;
-  }
-
   @Override
   public Animator onAppear(ViewGroup sceneRoot, View view, TransitionValues startValues, TransitionValues endValues) {
     if (view instanceof TransitioningView) {
       TransitioningView tv = (TransitioningView) view;
       if (tv.inTransition != null) {
-        return configureAnimator(tv.inTransition.onAppear(sceneRoot, view, startValues, endValues), tv.inTransition);
+        return TransitionUtils.configureAnimator(tv.inTransition.onAppear(sceneRoot, view, startValues, endValues), tv.inTransition);
       }
     }
     return null;
@@ -87,7 +75,7 @@ final class InOutTransition extends Visibility {
     if (view instanceof TransitioningView) {
       TransitioningView tv = (TransitioningView) view;
       if (tv.outTransition != null) {
-        return configureAnimator(tv.outTransition.onDisappear(sceneRoot, view, startValues, endValues), tv.outTransition);
+        return TransitionUtils.configureAnimator(tv.outTransition.onDisappear(sceneRoot, view, startValues, endValues), tv.outTransition);
       }
     }
     return null;

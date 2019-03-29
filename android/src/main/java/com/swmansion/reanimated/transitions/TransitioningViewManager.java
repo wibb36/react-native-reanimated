@@ -97,7 +97,9 @@ public class TransitioningViewManager extends ReactViewManager {
 
   @ReactProp(name = "changeTransition")
   public void setChangeTransition(TransitioningView view, ReadableMap params) {
-//    view
+    Transition transition = new DummyTransition();
+    configureTransition(transition, params);
+    view.changeTransition = transition;
   }
 
   @Override
