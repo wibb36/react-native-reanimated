@@ -75,6 +75,7 @@ const Warning = () => (
   <Transitioning.View
     inTransition={{ type: 'fade' }}
     outTransition={{ type: 'fade' }}
+    excludeChildren
     style={{ backgroundColor: 'red', padding: 10, paddingHorizontal: 20 }}>
     <Text style={{ color: 'white' }}>Lorem ipsum warning sit amet!</Text>
   </Transitioning.View>

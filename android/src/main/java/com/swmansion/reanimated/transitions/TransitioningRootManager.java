@@ -64,7 +64,7 @@ public class TransitioningRootManager extends ReactViewManager {
   @Override
   public Map<String, Integer> getCommandsMap() {
     Map<String, Integer> commands = new HashMap<>();
-//    commands.putAll(super.getCommandsMap());
+    commands.putAll(super.getCommandsMap());
     commands.put("animateNextTransition", COMMAND_ANIMATE_NEXT);
     return commands;
   }

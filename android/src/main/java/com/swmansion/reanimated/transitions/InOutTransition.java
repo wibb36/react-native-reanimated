@@ -30,6 +30,7 @@ final class InOutTransition extends Visibility {
         return;
       } else if ((getMode() & OUT) != 0 && tv.outTransition != null) {
         tv.outTransition.captureStartValues(transitionValues);
+        return;
       }
     }
     if (mDefaultTransition != null) {
@@ -46,6 +47,7 @@ final class InOutTransition extends Visibility {
         return;
       } else if ((getMode() & OUT) != 0 && tv.outTransition != null) {
         tv.outTransition.captureEndValues(transitionValues);
+        return;
       }
     }
     if (mDefaultTransition != null) {

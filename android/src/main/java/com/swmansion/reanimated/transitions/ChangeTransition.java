@@ -25,15 +25,22 @@ final class ChangeTransition extends Transition {
     sChangeTransform.setReparentWithOverlay(false);
   }
 
+  private final Transition mDefaultTransition;
+
+  public ChangeTransition(Transition changeTransition) {
+    mDefaultTransition = changeTransition;
+  }
 
   @Override
   public void captureStartValues(TransitionValues transitionValues) {
+    TransitionUtils.maybeExcludeChildren(transitionValues.view, this);
     sChangeTransform.captureStartValues(transitionValues);
     sChangeBounds.captureStartValues(transitionValues);
   }
 
   @Override
   public void captureEndValues(TransitionValues transitionValues) {
+    TransitionUtils.maybeExcludeChildren(transitionValues.view, this);
     sChangeTransform.captureEndValues(transitionValues);
     sChangeBounds.captureEndValues(transitionValues);
   }
@@ -42,6 +49,9 @@ final class ChangeTransition extends Transition {
   public Animator createAnimator(ViewGroup sceneRoot, TransitionValues startValues, TransitionValues endValues) {
     Animator changeTransformAnimator = sChangeTransform.createAnimator(sceneRoot, startValues, endValues);
     Animator changeBoundsAnimator = sChangeBounds.createAnimator(sceneRoot, startValues, endValues);
+
+    TransitionUtils.configureAnimator(changeTransformAnimator, mDefaultTransition);
+    TransitionUtils.configureAnimator(changeBoundsAnimator, mDefaultTransition);
 
     if (endValues != null && endValues.view instanceof TransitioningView) {
       TransitioningView tv = (TransitioningView) endValues.view;
