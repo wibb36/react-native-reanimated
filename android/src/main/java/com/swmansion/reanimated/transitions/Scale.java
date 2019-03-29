@@ -1,4 +1,4 @@
-package com.swmansion.reanimated;
+package com.swmansion.reanimated.transitions;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
