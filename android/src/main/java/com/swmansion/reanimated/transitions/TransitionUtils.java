@@ -6,7 +6,6 @@ import android.support.transition.Fade;
 import android.support.transition.Slide;
 import android.support.transition.Transition;
 import android.support.transition.Visibility;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -83,7 +82,6 @@ class TransitionUtils {
 
   public static void maybeExcludeChildren(View view, Transition transition) {
     if (view instanceof TransitioningView && ((TransitioningView) view).isExcludingChildren()) {
-      Log.e("CAT", "EXCDLUE " + view + " IN " + transition);
       transition.excludeChildren(view, true);
     }
   }

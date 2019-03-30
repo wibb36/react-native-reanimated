@@ -25,6 +25,9 @@ final class InOutTransition extends Visibility {
   public void captureStartValues(@NonNull TransitionValues transitionValues) {
     if (transitionValues.view instanceof TransitioningView) {
       TransitioningView tv = (TransitioningView) transitionValues.view;
+      if (tv.isDisabled()) {
+        return;
+      }
       if ((getMode() & IN) != 0 && tv.inTransition != null) {
         tv.inTransition.captureStartValues(transitionValues);
         return;
@@ -42,6 +45,9 @@ final class InOutTransition extends Visibility {
   public void captureEndValues(@NonNull TransitionValues transitionValues) {
     if (transitionValues.view instanceof TransitioningView) {
       TransitioningView tv = (TransitioningView) transitionValues.view;
+      if (tv.isDisabled()) {
+        return;
+      }
       if ((getMode() & IN) != 0 && tv.inTransition != null) {
         tv.inTransition.captureEndValues(transitionValues);
         return;
@@ -64,7 +70,9 @@ final class InOutTransition extends Visibility {
       }
     }
     if (mDefaultTransition != null) {
-      return mDefaultTransition.onAppear(sceneRoot, view, startValues, endValues);
+      return TransitionUtils.configureAnimator(
+              mDefaultTransition.onAppear(sceneRoot, view, startValues, endValues),
+              mDefaultTransition);
     }
     return super.onAppear(sceneRoot, view, startValues, endValues);
   }
@@ -78,7 +86,9 @@ final class InOutTransition extends Visibility {
       }
     }
     if (mDefaultTransition != null) {
-      return mDefaultTransition.onDisappear(sceneRoot, view, startValues, endValues);
+      return TransitionUtils.configureAnimator(
+              mDefaultTransition.onDisappear(sceneRoot, view, startValues, endValues),
+              mDefaultTransition);
     }
     return super.onDisappear(sceneRoot, view, startValues, endValues);
   }

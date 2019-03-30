@@ -40,7 +40,7 @@ const Location = ({ label, name, delay }) => (
 const Spacer = ({ height }) => <View style={{ flex: 1, maxHeight: height }} />;
 
 const Wat = () => (
-  <View style={{ marginHorizontal: 20, flexGrow: 1 }}>
+  <Transitioning.View disabled style={{ marginHorizontal: 20, flexGrow: 1 }}>
     <Spacer height={20} />
     <View
       style={{
@@ -68,7 +68,7 @@ const Wat = () => (
       fermentum suscipit eros.
     </Text>
     <View style={{ flex: 2 }} />
-  </View>
+  </Transitioning.View>
 );
 
 const Warning = () => (
@@ -84,7 +84,7 @@ const Warning = () => (
 class ExampleApp extends React.Component {
   state = {
     size: 80,
-    visible: true,
+    visible: false,
     warning: false,
     rotate: '30deg',
     align: 'flex-start',
@@ -130,8 +130,8 @@ class ExampleApp extends React.Component {
         <Transitioning.Root
           ref={this.root}
           style={{ flex: 1 }}
-          outTransition={{ type: 'slide-top' }}
-          inTransition={{ type: 'slide-bottom' }}>
+          outTransition={{ type: 'slide-bottom', durationMs: 500 }}
+          inTransition={{ type: 'slide-bottom', durationMs: 500 }}>
           {warning ? <Warning /> : null}
           {visible ? <Wat /> : null}
         </Transitioning.Root>

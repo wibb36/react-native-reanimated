@@ -8,8 +8,8 @@ import com.facebook.react.views.view.ReactViewGroup;
 
 final class TransitioningView extends TransitioningRoot {
 
-  private boolean mDisabled;
-  private boolean mExcludeChildren;
+  private boolean mDisabled = false;
+  private boolean mExcludeChildren = false;
 
   public TransitioningView(Context context) {
     super(context);

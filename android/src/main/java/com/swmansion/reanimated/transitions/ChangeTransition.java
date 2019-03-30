@@ -2,19 +2,13 @@ package com.swmansion.reanimated.transitions;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.transition.ChangeBounds;
 import android.support.transition.ChangeTransform;
 import android.support.transition.Transition;
-import android.support.transition.TransitionSet;
 import android.support.transition.TransitionValues;
-import android.util.Log;
-import android.view.View;
 import android.view.ViewGroup;
 
 final class ChangeTransition extends Transition {
-  private static final String PROPNAME_BOUNDS = "android:changeBounds:bounds";
 
   private static final ChangeTransform sChangeTransform;
   private static final ChangeBounds sChangeBounds = new ChangeBounds();

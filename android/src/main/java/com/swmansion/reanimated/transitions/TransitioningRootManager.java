@@ -2,7 +2,6 @@ package com.swmansion.reanimated.transitions;
 
 import android.support.transition.Transition;
 import android.support.transition.Visibility;
-import android.util.Log;
 
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
@@ -73,7 +72,6 @@ public class TransitioningRootManager extends ReactViewManager {
   public void receiveCommand(ReactViewGroup root, int commandId, @Nullable ReadableArray args) {
     super.receiveCommand(root, commandId, args);
     if (commandId == COMMAND_ANIMATE_NEXT) {
-      Log.e("CAT", "LOL");
       ((TransitioningRoot) root).requestAnimateNextTransition();
     }
   }
